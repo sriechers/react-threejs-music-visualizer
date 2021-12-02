@@ -150,6 +150,7 @@ class ThreeJS_Scene {
 
 
 function ThreeCanvas() {
+  // Container ref
   const containerRef = useRef();
 
   useEffect(()=> {
