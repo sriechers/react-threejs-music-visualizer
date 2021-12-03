@@ -1,9 +1,11 @@
 {
   "name": "react-threejs-music-visualizer",
+  "homepage": "https://sriechers.github.io/react-threejs-music-visualizer",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
     "@craco/craco": "^6.4.2",
+    "@heroicons/react": "^1.0.5",
     "@testing-library/jest-dom": "^5.15.1",
     "@testing-library/react": "^11.2.7",
     "@testing-library/user-event": "^12.8.3",
@@ -14,8 +16,10 @@
     "web-vitals": "^1.1.2"
   },
   "scripts": {
-    "start": "craco start && postcss src/css/index.css -o public/index.css",
-    "build": "craco build", 
+    "start": "craco start",
+    "build": "craco build",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "test": "craco test",
     "eject": "react-scripts eject"
   },
@@ -39,6 +43,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^9.8.8",
+    "gh-pages": "^3.2.3",
     "postcss": "^7.0.39",
     "tailwindcss": "npm:@tailwindcss/postcss7-compat@^2.2.17"
   }
