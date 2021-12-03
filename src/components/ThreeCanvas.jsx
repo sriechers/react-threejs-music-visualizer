@@ -13,7 +13,7 @@ import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js';
 import { ChromaticAbberationShader } from '../shaders/ChromaticAbberationShader.js';
 
 class ThreeJS_Scene {
-    constructor(options){
+    constructor(options){  
         this.time = 0; 
         this.container = options.domEl;
         this.scene = new THREE.Scene();
