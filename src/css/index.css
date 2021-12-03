@@ -1,3 +1,10 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities; 
+
+body, html {
+  background-color: #000;
+}
+.webgl-canvas {
+  height: calc(100vh - 6.125rem);
+}

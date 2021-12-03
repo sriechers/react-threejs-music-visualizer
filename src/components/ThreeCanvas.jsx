@@ -167,7 +167,7 @@ function ThreeCanvas() {
   }, [])
 
   return (
-    <div ref={containerRef} className="h-screen w-screen"></div>
+    <div ref={containerRef} className="webgl-canvas"></div>
   )
 }
 
