@@ -1,8 +1,20 @@
+import { useContext, useEffect } from 'react'
 import { PlayIcon, FastForwardIcon } from '@heroicons/react/solid'
-function Player({ currentTrack }) {
+import AudioContext from '../contexts/AudioContext'
+import useAudio from '../hooks/useAudio'
+
+function Player({ currentTrack, currentSongUrl, onPlay }) {
+  const { dataArray, playing, toggle } = useAudio(currentSongUrl);
+  const audioData = useContext(AudioContext)
+
   const playSong = () => {
-    console.log("play")
+    toggle()
+    // typeof onPlay === 'function' && onPlay();
   }
+
+  useEffect(() => {
+    console.log(dataArray)
+  }, [dataArray])
 
   const prevSong = () => {
 

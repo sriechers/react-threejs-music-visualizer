@@ -13,9 +13,23 @@ import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js';
 import { ChromaticAbberationShader } from '../shaders/ChromaticAbberationShader.js';
 
 class ThreeJS_Scene {
-    constructor(options){  
+    constructor({ domEl, audioFile, shouldLoop = false, playing = false, frequencySamples = 512, timeSamples = 1200  }){  
         this.time = 0; 
-        this.container = options.domEl;
+        this.container = domEl;
+        this.audioFile = audioFile;
+        this.audioPlaying = playing;
+
+        this.shouldLoop = shouldLoop;
+        this.frequency_samples = frequencySamples;
+        this.AudioCtx = new AudioContext();
+        this.audio = new Audio(this.audioFile);
+        this.time_samples = timeSamples;
+        this.SOURCE = null;
+        this.ACTX = null;
+        this.ANALYSER = null;
+        this.DATA = null;
+        if(this.shouldLoop) this.audio.loop = true;
+
         this.scene = new THREE.Scene();
         this.scene.fog = new THREE.FogExp2( 0x000000, 0.001 );
 
@@ -46,7 +60,8 @@ class ThreeJS_Scene {
         this.controls = new OrbitControls( this.camera, this.renderer.domElement );
 
         this.composerPass();
-        this.addObjects();
+
+        this.addObjects()
         this.resize();
         this.render();
 
@@ -54,6 +69,22 @@ class ThreeJS_Scene {
         
     }
 
+    playAudio(){
+      if(!this.audio.paused || !this.audioPlaying) return;
+      this.audio.play();
+      this.stream = this.audio.captureStream();
+      this.ANALYSER = this.AudioCtx.createAnalyser();
+      this.ANALYSER.fftSize = 4*this.frequency_samples;  
+      this.ANALYSER.smoothingTimeConstant = 0.5;
+      this.DATA = new Uint8Array(this.ANALYSER.frequencyBinCount);
+  
+      this.SOURCE = this.AudioCtx.createMediaStreamSource(this.stream);
+      this.SOURCE.connect(this.ANALYSER);
+    }
+
+    stopAudio() {
+      this.audio.pause();
+    }
 
     composerPass(){
         this.composer = new EffectComposer(this.renderer);
@@ -75,7 +106,6 @@ class ThreeJS_Scene {
         this.composer.addPass( this.distortPass );
 
     }
-
 
     mouseMovement(){
         window.addEventListener( 'mousemove', (event) => {
@@ -126,12 +156,19 @@ class ThreeJS_Scene {
     destroy(){ 
       window.cancelAnimationFrame(this.raf)
       window.removeEventListener('resize', this.resize)
-
+      this.audio?.pause();
+      this.container.innerHTML = '';
     }
 
     render(){
-        this.time+=0.05;      
-        
+        this.time+=0.05;   
+        console.log(this.time)   
+        if(this.audio?.readyState > 2 && this.audioPlaying){
+          this.playAudio();
+        }
+
+        if(!this.audioPlaying && !this.audio.paused) this.stopAudio();
+
         this.mesh.rotation.y = this.time / 40;
         this.mesh.rotation.z = this.time / 65;
 
@@ -149,13 +186,15 @@ class ThreeJS_Scene {
 }
 
 
-function ThreeCanvas() {
+function ThreeCanvas({ audioFile, playing = false }) {
   // Container ref
   const containerRef = useRef();
 
   useEffect(()=> {
     let THREE_INSTANCE = new ThreeJS_Scene({
       domEl: containerRef.current,
+      audioFile,
+      playing,
       vertexShader,
       fragmentShader
     })
@@ -164,7 +203,7 @@ function ThreeCanvas() {
       THREE_INSTANCE.destroy()
       THREE_INSTANCE = null;
     }
-  }, [])
+  }, [audioFile, playing])
 
   return (
     <div ref={containerRef} className="webgl-canvas"></div>
