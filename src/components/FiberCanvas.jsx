@@ -1,23 +1,22 @@
-import { useRef, Suspense, useEffect } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import * as THREE from 'three'
 import { Canvas, useFrame, extend, useThree } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
-import { EffectComposer, SMAA, DepthOfField, Bloom, Noise, ChromaticAberration } from '@react-three/postprocessing'
-import { BlendFunction, Resizer, BlurPass, KernelSize } from 'postprocessing'
 import glowingNoiseShaderMaterial from '../shaders/glowingNoiseShaderMaterial'
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass'
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass'
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass'
 import { FXAAShader } from 'three/examples/jsm/shaders/FXAAShader'
 import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js';
-import useAudio from '../hooks/useAudio'
+// import { useAudioPlayer } from "react-use-audio-player"
+import { useAudio } from '../contexts/AudioContext'
 
 extend({ UnrealBloomPass, FilmPass, FXAAShader, RenderPass, ShaderPass })
 
-function AudioSphere() {
+function AudioSphere({ audioData, analyser, playing }) {
   const ref = useRef()
   const { size } = useThree()
-  // const { dataArray } = useAudio();
+  const frequencyBandArray = [...Array(100).keys()]
 
   useFrame((state, delta) => {
     let time = state.clock.elapsedTime;
@@ -27,16 +26,30 @@ function AudioSphere() {
     ref.current.rotation.y = time / 20;
     ref.current.rotation.z = time / 45;
 
+    if(playing && audioData) {
+      analyser.getByteFrequencyData(audioData)
+      ref.current.rotation.x = time / 10;
+      ref.current.rotation.y = time / 5;
+      ref.current.rotation.z = time / 15;
+      for(let i = 0; i < frequencyBandArray.length; i++){
+        let num = frequencyBandArray[i]
+        let freq = audioData[num];
+        ref.current.material.uniforms.u_freq.value = freq;
+      }
+    }
+
   })
 
   return (
-    <mesh 
-    ref={ref} 
-    >
-      <sphereBufferGeometry attach="geometry" args={[100, 200, 200]}/>
-      <glowingNoiseShaderMaterial attach="material" color="#203050"/>
-      {/* <meshStandardMaterial attach="material" color={'#00ff00'} /> */}
-    </mesh>
+    <>
+      <mesh 
+      ref={ref} 
+      >
+        <sphereBufferGeometry attach="geometry" args={[100, 200, 200]}/>
+        <glowingNoiseShaderMaterial attach="material" color="#203050"/>
+        {/* <meshStandardMaterial attach="material" color={'#00ff00'} /> */}
+      </mesh>
+    </>
   )
 }
 
@@ -60,7 +73,9 @@ function Postprocessing({ bloomOptions = [2, 1.0, 1.5, 0], grainOptions = [1, 0,
 }
 
 function FiberCanvas() {
+    const { playing, analyser, data } = useAudio({url: false})
     return ( 
+      <>
       <div className="webgl-canvas">
         <Canvas
         dpr={window.devicePixelRatio}
@@ -71,33 +86,14 @@ function FiberCanvas() {
           gl.setClearColor('#000000')
         }}
         >
-          {/* <Suspense fallback={null}>
-            <EffectComposer>
-              <Noise 
-                opacity={0.05} 
-              />
-              <Bloom
-                intensity={0.5} // The bloom intensity.
-                kernelSize={KernelSize.HUGE} // blur kernel size
-                // blurPass={new BlurPass({ height: Resizer.AUTO_SIZE * window.devicePixelRatio, width: Resizer.AUTO_SIZE * window.devicePixelRatio })}
-                width={Resizer.AUTO_SIZE} // render width
-                height={Resizer.AUTO_SIZE} // render height
-                luminanceThreshold={0.01} // luminance threshold. Raise this value to mask out darker elements in the scene.
-                luminanceSmoothing={0}
-              />
-              <ChromaticAberration
-                blendFunction={BlendFunction.AVERAGE} // blend mode
-                offset={[0.002, 0.002]} // color offset
-              />
-            </EffectComposer>
-          </Suspense> */}
           <ambientLight intensity={1} />
           {/* <pointLight color="white" intensity={1000} position={[window.innerWidth / 2, window.innerHeight / 2, 230]} /> */}
-          <AudioSphere />
+          <AudioSphere audioData={data} playing={playing} analyser={analyser}/>
           <OrbitControls enableZoom={false} enablePan={false}/>
           <Postprocessing bloomOptions={[2, 1.0, 1.5, 0]}/>
         </Canvas>
       </div>
+      </>
     )
 }
 

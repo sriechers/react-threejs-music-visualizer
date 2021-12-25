@@ -1,16 +1,26 @@
 [
   {
-    "title": "Chasing (Demo)",
-    "artist": "NF",
+    "title": "Cinematic Dramatic",
+    "artist": "AleXZavesa",
     "img": {
-      "src": "https://via.placeholder.com/150"
-    }
+      "src": "/assets/mountain1.jpg"
+    },
+    "songUrl": "/music/cinematic1.mp3" 
   },
   {
-    "title": "Tell me about tomorrow",
-    "artist": "JXDN",
+    "title": "Cinematic Melody (Main)",
+    "artist": "ZakharValaha",
     "img": {
-      "src": "https://via.placeholder.com/150"
-    }
+      "src": "/assets/mountain2.jpg"
+    },
+    "songUrl": "/music/cinematic2.mp3" 
+  },
+  {
+    "title": "Rhythm of War (Main)",
+    "artist": "ZakharValaha",
+    "img": {
+      "src": "/assets/war.jpg"
+    },
+    "songUrl": "/music/cinematic3.mp3" 
   }
 ]

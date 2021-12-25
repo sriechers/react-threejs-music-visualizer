@@ -6,7 +6,9 @@ export const GlowingNoiseShaderMaterial = shaderMaterial(
   {  
     u_time: 0,
     u_mouse: new THREE.Vector2(0,0),
-    u_resolution: new THREE.Vector2(0,0)
+    u_resolution: new THREE.Vector2(0,0),
+    u_freq: 0
+    // u_audioDataArray: new THREE.Vector()
   },
   `
   varying vec2 vUv;
@@ -14,6 +16,8 @@ export const GlowingNoiseShaderMaterial = shaderMaterial(
   varying float vDistort;
   uniform float u_time;
   uniform vec2 u_mouse;
+  uniform float u_freq;
+  float PI = 3.14159265359;
 
   // uniform vec2 u_hover; 
 
@@ -147,17 +151,25 @@ export const GlowingNoiseShaderMaterial = shaderMaterial(
 
     float scale = clamp(1.0 - abs(abs(u_mouse.x) + abs(u_mouse.y)), 1.0, 1.05);
 
-
+    float audioFreq = u_freq;
     float speed = 0.02;
-    // float mouseMorph = u_mouse.x / 15.;
-
-    float t = u_time * speed;
+    float t = u_time * speed + clamp(audioFreq / 100., 0.0, 0.2);
     float frequency = 2.9;
     float amplitude = 2.;
-    float noiseDensity = 7.2;
-    float noiseStrength = 8.;
     float noiseScale = 1.0;
+    float noiseDensity = 7.2 - sin(2.0*PI*(audioFreq / 15. / u_time) * 0.01);
+    float noiseStrength = 8. * mix(1.0, 2.0, u_freq / 100.);
+
     vec3 repetitions = vec3(2.0);
+
+    // if playing
+    if(audioFreq > 0.0){
+      speed += 0.2;
+      noiseScale -= 0.1;
+      amplitude += 1.0;
+      frequency += 0.3;
+    }
+
   
     float distortion = pnoise((normal * noiseScale + t) * noiseDensity, repetitions) * noiseStrength;
     vDistort = distortion;
@@ -167,7 +179,7 @@ export const GlowingNoiseShaderMaterial = shaderMaterial(
     pos = rotateY(pos, angle);    
 
 
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos * (scale + mousePos * 0.02), 1.);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos * ((clamp(scale * mix(1.0, 1.13, u_freq / 100.), 1.0, 1.8)) + mousePos * 0.02), 1.);
   }
   `,
 
@@ -178,6 +190,7 @@ export const GlowingNoiseShaderMaterial = shaderMaterial(
   uniform float u_time;
   uniform vec2 u_resolution;
   uniform vec2 u_mouse;
+  uniform float u_freq;
   // uniform vec2 u_hover; 
   float PI = 3.14159265359;
 
@@ -197,7 +210,7 @@ export const GlowingNoiseShaderMaterial = shaderMaterial(
 
   void main()	{
     float intensity = 6.0;
-    float distort = vDistort * intensity;
+    float distort = vDistort * intensity + mix(0.0, 0.13, u_freq / 100.);
 
     vec2 position = gl_FragCoord.xy / u_resolution.xy;
 
@@ -209,7 +222,7 @@ export const GlowingNoiseShaderMaterial = shaderMaterial(
 
     float randGlow = (sin(2. * PI + u_time / 1.8) + 10.0) * 0.02;
 
-    float glow = quarticInOut(clamp(mouse, 0.1, 0.2) + randGlow);
+    float glow = quarticInOut(clamp(mouse, 0.1, 0.2) + randGlow) + mix(0.0, 0.13, u_freq / 100.);
 
     vec3 color = cosPalette(distort, brightness, contrast, oscilation, phase) * glow;
 
